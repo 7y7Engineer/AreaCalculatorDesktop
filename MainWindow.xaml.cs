@@ -31,6 +31,106 @@ namespace AreaCalculatorDesktop
             linearsObjects.Add(line2);
             //Написать метод в текущем классе, который будет определять точки коллизии между 
         }
+
+        /// <summary>
+        /// Метод, проверяющий пересекаются ли 2 отрезка [p1, p2] и [p3, p4]
+        /// </summary>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <returns></returns>
+        public bool CossingLines(Point p1, Point p2, Point p3, Point p4)
+        {
+            double Xa, Ya;
+            double A1, b1;
+            double A2, b2;
+
+            // p1.X <= p2.X
+            if (p2.X < p1.X)
+            {
+                Point tmp = p1;
+                p1 = p2;
+                p2 = tmp;
+            }
+            // p3.X <= p4.X
+            if (p4.X < p3.X)
+            {
+                Point tmp = p3;
+                p3 = p4;
+                p4 = tmp;
+            }
+            // Check interval
+            if (p2.X < p3.X)
+            {
+                return false;
+            }
+            // If both segments are vertical
+            if ((p1.X - p2.X == 0) && (p3.X - p4.X == 0))
+            {
+                // If they lie on the same X
+                if (p1.X == p3.X)
+                {
+                    // Check if they intersect, if they have a common Y
+                    if (!((Math.Max(p1.Y, p2.Y) < Math.Min(p3.Y, p4.Y)) || (Math.Min(p1.Y, p2.Y) > Math.Max(p3.Y, p4.Y))))
+                    {
+                        // The segments have no mutual abscissa
+                        return true;
+                    }
+                }
+                return false;
+            }
+            // If the first segment is vertical
+            if (p1.X - p2.X == 0)
+            {
+                // Find Xa, Ya - intersection points of two lines
+                Xa = p1.X;                                                      //********************************** Xa 
+                A2 = (p3.Y - p4.Y) / (p3.X - p4.X);
+                b2 = p3.Y - A2 * p3.X;
+                Ya = A2 * Xa + b2;                                              //********************************** Ya
+                if (p3.X <= Xa && p4.X >= Xa && Math.Min(p1.Y, p2.Y) <= Ya && Math.Max(p1.Y, p2.Y) >= Ya)
+                {
+                    return true;
+                }
+                return false;
+            }
+            // If the second segment is vertical
+            if (p3.X - p4.X == 0)
+            {
+                // Find Xa, Ya - intersection points of two lines
+                Xa = p3.X;                                                       //********************************** Xa
+                A1 = (p1.Y - p2.Y) / (p1.X - p2.X);
+                b1 = p1.Y - A1 * p1.X;
+                Ya = A1 * Xa + b1;                                               //********************************** Ya
+                if (p1.X <= Xa && p2.X >= Xa && Math.Min(p3.Y, p4.Y) <= Ya && Math.Max(p3.Y, p4.Y) >= Ya)
+                {
+                    return true;
+                }
+                return false;
+            }
+            // The both segments isn't vertical
+            A1 = (p1.Y - p2.Y) / (p1.X - p2.X);
+            A2 = (p3.Y - p4.Y) / (p3.X - p4.X);
+            b1 = p1.Y - A1 * p1.X;
+            b2 = p3.Y - A2 * p3.X;
+            if (A1 == A2)
+            {
+                // Parallel segments
+                return false; 
+            }
+            // Xa - abscissa of the point of intersection of two lines
+            Xa = (b2 - b1) / (A1 - A2);                                        //********************************** Xa
+            Ya = A1 * Xa + b1;                                                 //********************************** Ya
+            if ((Xa < Math.Max(p1.X, p3.X)) || (Xa > Math.Min(p2.X, p4.X)))
+            {
+                // Point Xa is outside the intersection of the projections of the line segments on the X axis
+                return false;     
+            }
+            else
+            {
+                return true;
+            }
+        }
     }
 
     /// <summary>
