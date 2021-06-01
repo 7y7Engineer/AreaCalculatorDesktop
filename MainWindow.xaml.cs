@@ -13,46 +13,47 @@ namespace AreaCalculatorDesktop
         public MainWindow()
         {
             InitializeComponent();
-            new AreaCalculator();
+
+            Polygon convex = new Convex(new List<Point>() { new Point(0, 0), new Point(0, 10), new Point(10, 10), new Point(10, 0) });            
+            var line1 = new LinearObject(1, 5, 5, -7); // 5x\ +\ 5y\ -\ 7\ =0
+            var line2 = new LinearObject(2, 2, 5, -6); // 2x\ +\ 5y\ -\ 6\ =0
+            var linearObjects = new List<LinearObject> { line1, line2 };
+
+            var areaCalculator = new AreaCalculator(convex, linearObjects);
+            // For a more accurate meaning, change second parametr rounding of Round()
+            var resultSquare = areaCalculator.SquareLinesInPolygon();
         }
     }
 
     /// <summary>
-    /// 
+    /// Calculates the area of ​​crossing lines 
     /// </summary>
     public class AreaCalculator
     {
-        public AreaCalculator()
+        private readonly Polygon _polygon;
+        private readonly List<LinearObject> _linearObjects;
+
+        public Polygon Polygon
         {
-            Polygon convex = new Convex(new List<Point>() { new Point(0, 0), new Point(0, 10), new Point(10, 10), new Point(10, 0) });
-            var vertices = convex.Vertexes;
-            var line1 = new LinearObject(1, 5, 5, -7); // 5x\ +\ 5y\ -\ 7\ =0
-            var line2 = new LinearObject(2, 2, 5, -6); // 2x\ +\ 5y\ -\ 6\ =0
+            get => _polygon;
+        }
+        public List<LinearObject> LinearObjects
+        {
+            get => _linearObjects;
+        }
 
-            var points1 = CollisionLineAndPolygon(vertices, line1.LinearEquationInstance.CalculatePoint(-100),
-                line1.LinearEquationInstance.CalculatePoint(100));
+        // Cartesian plane constants 
+        public const double c_min_coordinate = -100;
+        public const double c_max_coordinate = 100;        
 
-            var points2 = CollisionLineAndPolygon(vertices, line2.LinearEquationInstance.CalculatePoint(-100),
-                line2.LinearEquationInstance.CalculatePoint(100));
-
-            var squareLineCrossPolygon1 = LengthSection(points1[0], points1[1]) * line1.Width;
-
-            var squareLineCrossPolygon2 = LengthSection(points2[0], points2[1]) * line2.Width;
-
-            var sum = squareLineCrossPolygon1 + squareLineCrossPolygon2 - line1.Width * line2.Width;
-            /*var linearsObjects = new List<LinearObject>();
-            linearsObjects.Add(line1);
-            linearsObjects.Add(line2);*/
-
-            /*var points1 = CollisionLineAndPolygon(vertexes, new Point(5, -100), new Point(5, 100)); // x = 5
-            var points2 = CollisionLineAndPolygon(vertexes, new Point(-100, -100), new Point(100, 100));  // y = x
-            var points3 = CollisionLineAndPolygon(vertexes, new Point(-50, -100), new Point(50, 100));  // y = 2x
-            var points4 = CollisionLineAndPolygon(vertexes, new Point(0, -100), new Point(0, 100));  // x = 0
-            var points5 = CollisionLineAndPolygon(vertexes, new Point(-100, 0), new Point(100, 0));  // y = 0*/
+        public AreaCalculator(Polygon polygon, List<LinearObject> linearObjects)
+        {
+            _polygon = polygon;
+            _linearObjects = linearObjects;            
         }
 
         /// <summary>
-        /// Метод, проверяющий пересекаются ли 2 отрезка [p1, p2] и [p3, p4]
+        /// Checks if two line segments crossing [p1, p2] and [p3, p4]
         /// </summary>
         /// <param name="p1"></param>
         /// <param name="p2"></param>
@@ -62,7 +63,7 @@ namespace AreaCalculatorDesktop
         /// Return null if lines isn't crossing
         /// Return point of crossing, if lines is crossing
         /// </returns>
-        public Point? CrossingLines(Point p1, Point p2, Point p3, Point p4)
+        protected Point? CrossingLines(Point p1, Point p2, Point p3, Point p4)
         {
             double Xa, Ya;
             double A1, b1;
@@ -155,13 +156,30 @@ namespace AreaCalculatorDesktop
         }
 
         /// <summary>
-        /// 
+        /// List of all sections witch cross polygon
+        /// </summary>
+        /// <param name="verticesPolygon"></param>
+        /// <param name="linearObjects"></param>
+        /// <returns></returns>
+        protected List<List<Point>> CrossPolygonLines(List<Point> verticesPolygon, List<LinearObject> linearObjects)
+        {
+            var crossPolygonLines = new List<List<Point>>();
+            foreach (var line in linearObjects)
+            {
+                crossPolygonLines.Add(CollisionLineAndPolygon(verticesPolygon, line.LinearEquationInstance.CalculatePoint(c_min_coordinate),
+                    line.LinearEquationInstance.CalculatePoint(c_max_coordinate)));
+            }
+            return crossPolygonLines;
+        }
+
+        /// <summary>
+        /// List of points section witch cross edge polygon
         /// </summary>
         /// <param name="vertexes"></param>
         /// <param name="p1"></param>
         /// <param name="p2"></param>
         /// <returns></returns>
-        public List<Point> CollisionLineAndPolygon(List<Point> vertices, Point p1, Point p2)
+        protected List<Point> CollisionLineAndPolygon(List<Point> vertices, Point p1, Point p2)
         {
             var collisionLineAndPolygonPoints = new List<Point>();
             for (int i = 0; i < vertices.Count; i++)
@@ -189,21 +207,83 @@ namespace AreaCalculatorDesktop
             return collisionLineAndPolygonPoints.Distinct().ToList();
         }
 
-        public double LengthSection(Point p1, Point p2)
+        /// <summary>
+        /// Calculate length section 
+        /// </summary>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <returns></returns>
+        protected double LengthSection(Point p1, Point p2)
         {
             return (p2 - p1).Length;
+        }
+
+        /// <summary>
+        /// Square of crossing polygon lines
+        /// </summary>
+        /// <param name="linearObjects">linearObjects collection</param>
+        /// <param name="crossPolygonLines">crossPolygonLines collection</param>
+        /// <returns></returns>
+        protected double SquareLinesCrossPolygonWithoutOverlap(List<List<Point>> crossPolygonLines, List<LinearObject> linearObjects)
+        {            
+            double squareLinesCrossPolygonWithoutOverlap = 0;
+            for (int i = 0; i < linearObjects.Count; i++)
+            {
+                squareLinesCrossPolygonWithoutOverlap += LengthSection(crossPolygonLines[i][0], crossPolygonLines[i][1])
+                    * linearObjects[i].Width;
+            }
+            return Math.Abs(squareLinesCrossPolygonWithoutOverlap);
+        }
+
+        /// <summary>
+        /// Square of crossing lines overlap
+        /// </summary>
+        /// <param name="linearObjects">linearObjects collection</param>
+        /// <param name="crossPolygonLines">crossPolygonLines collection</param>
+        /// <returns></returns>
+        protected double SquareOverlapLines(List<List<Point>> crossPolygonLines, List<LinearObject> linearObjects)
+        {
+            double squareOverlapLines = 0;
+            for (int i = 0; i < linearObjects.Count; i++)
+            {
+                for (int j = i + 1; j < linearObjects.Count; j++)
+                {
+                    Point? pointCrossingLines = CrossingLines(crossPolygonLines[i][0], crossPolygonLines[i][1],
+                        crossPolygonLines[j][0], crossPolygonLines[j][1]);
+                    if (pointCrossingLines != null)
+                    {
+                        // Formula squareOverlapLines += A[i]*B[j]*sin(AngleAB)
+                        squareOverlapLines += linearObjects[i].Width * linearObjects[j].Width * Math.Abs(Math.Sin(Vector.AngleBetween(
+                            crossPolygonLines[i][1] - crossPolygonLines[i][0], crossPolygonLines[j][1] - crossPolygonLines[j][0])));
+                    }
+                }
+            }
+            return Math.Abs(squareOverlapLines);
+        }
+
+        /// <summary>
+        /// Square of crossing lines in the polygon. Calculating using state object
+        /// </summary>
+        /// <param name="squareLinesCrossPolygonWithoutOverlap"></param>
+        /// <param name="squareOverlapLines"></param>
+        /// <returns></returns>
+        public double SquareLinesInPolygon()
+        {
+            var crossPolygonLines = CrossPolygonLines(Polygon.Vertices, LinearObjects);
+            return Math.Round(Math.Abs(SquareLinesCrossPolygonWithoutOverlap(crossPolygonLines, LinearObjects) 
+                - SquareOverlapLines(crossPolygonLines, LinearObjects)), 7);
         }
     }
 
     /// <summary>
-    /// 
+    /// General polygon class
     /// </summary>
     public abstract class Polygon
     {
         private readonly List<Point> _vertexes;
         private readonly List<Vector> _edges;
 
-        public List<Point> Vertexes
+        public List<Point> Vertices
         {
             get => _vertexes;
         }
@@ -248,16 +328,14 @@ namespace AreaCalculatorDesktop
     /// </summary>
     public class Convex : Polygon
     {
-        /// <summary>
-        /// Constructor
-        /// </summary>
         public Convex(List<Point> vertexes) : base(vertexes)
         {
-            if (!IsConvex(Vertexes, Edges))
+            if (!IsConvex(Vertices, Edges))
             {
-                throw new Exception("The polygon is not convex.");
+                throw new Exception("The polygon isn't convex.");
             }
         }
+
         /// <summary>
         /// Determines whether the geometric figure is a convex polygon
         /// </summary>
@@ -290,10 +368,10 @@ namespace AreaCalculatorDesktop
     /// </summary>
     public class LinearObject
     {
-        private readonly uint _widthLine;
+        private readonly double _widthLine;
         private readonly LinearEquation _linearEquation;
 
-        public uint Width
+        public double Width
         {
             get => _widthLine;
         }
@@ -302,7 +380,7 @@ namespace AreaCalculatorDesktop
             get => _linearEquation;
         }
 
-        public LinearObject(uint width, int coefficientA, int coefficientB, int coefficientC)
+        public LinearObject(double width, int coefficientA, int coefficientB, int coefficientC)
         {
             _widthLine = width;
             _linearEquation = new LinearEquation(coefficientA, coefficientB, coefficientC);
