@@ -13,23 +13,42 @@ namespace AreaCalculatorDesktop
         public MainWindow()
         {
             InitializeComponent();
+            new AreaCalculator();
         }
     }
 
     /// <summary>
     /// 
     /// </summary>
-    public class Program
+    public class AreaCalculator
     {
-        public Program()
+        public AreaCalculator()
         {
-            var convex = new Convex(new List<Point>());
-            var line1 = new LinearObject(1, 5, 5, 7);
-            var line2 = new LinearObject(2, 2, 1, 1);
-            var linearsObjects = new List<LinearObject>();
+            Polygon convex = new Convex(new List<Point>() { new Point(0, 0), new Point(0, 10), new Point(10, 10), new Point(10, 0) });
+            var vertices = convex.Vertexes;
+            var line1 = new LinearObject(1, 5, 5, -7); // 5x\ +\ 5y\ -\ 7\ =0
+            var line2 = new LinearObject(2, 2, 5, -6); // 2x\ +\ 5y\ -\ 6\ =0
+
+            var points1 = CollisionLineAndPolygon(vertices, line1.LinearEquationInstance.CalculatePoint(-100),
+                line1.LinearEquationInstance.CalculatePoint(100));
+
+            var points2 = CollisionLineAndPolygon(vertices, line2.LinearEquationInstance.CalculatePoint(-100),
+                line2.LinearEquationInstance.CalculatePoint(100));
+
+            var squareLineCrossPolygon1 = LengthSection(points1[0], points1[1]) * line1.Width;
+
+            var squareLineCrossPolygon2 = LengthSection(points2[0], points2[1]) * line2.Width;
+
+            var sum = squareLineCrossPolygon1 + squareLineCrossPolygon2 - line1.Width * line2.Width;
+            /*var linearsObjects = new List<LinearObject>();
             linearsObjects.Add(line1);
-            linearsObjects.Add(line2);
-            //Написать метод в текущем классе, который будет определять точки коллизии между 
+            linearsObjects.Add(line2);*/
+
+            /*var points1 = CollisionLineAndPolygon(vertexes, new Point(5, -100), new Point(5, 100)); // x = 5
+            var points2 = CollisionLineAndPolygon(vertexes, new Point(-100, -100), new Point(100, 100));  // y = x
+            var points3 = CollisionLineAndPolygon(vertexes, new Point(-50, -100), new Point(50, 100));  // y = 2x
+            var points4 = CollisionLineAndPolygon(vertexes, new Point(0, -100), new Point(0, 100));  // x = 0
+            var points5 = CollisionLineAndPolygon(vertexes, new Point(-100, 0), new Point(100, 0));  // y = 0*/
         }
 
         /// <summary>
@@ -39,8 +58,11 @@ namespace AreaCalculatorDesktop
         /// <param name="p2"></param>
         /// <param name="p3"></param>
         /// <param name="p4"></param>
-        /// <returns></returns>
-        public bool CossingLines(Point p1, Point p2, Point p3, Point p4)
+        /// <returns> 
+        /// Return null if lines isn't crossing
+        /// Return point of crossing, if lines is crossing
+        /// </returns>
+        public Point? CrossingLines(Point p1, Point p2, Point p3, Point p4)
         {
             double Xa, Ya;
             double A1, b1;
@@ -63,7 +85,7 @@ namespace AreaCalculatorDesktop
             // Check interval
             if (p2.X < p3.X)
             {
-                return false;
+                return null;
             }
             // If both segments are vertical
             if ((p1.X - p2.X == 0) && (p3.X - p4.X == 0))
@@ -75,38 +97,38 @@ namespace AreaCalculatorDesktop
                     if (!((Math.Max(p1.Y, p2.Y) < Math.Min(p3.Y, p4.Y)) || (Math.Min(p1.Y, p2.Y) > Math.Max(p3.Y, p4.Y))))
                     {
                         // The segments have no mutual abscissa
-                        return true;
+                        return null;
                     }
                 }
-                return false;
+                return null;
             }
             // If the first segment is vertical
             if (p1.X - p2.X == 0)
             {
                 // Find Xa, Ya - intersection points of two lines
-                Xa = p1.X;                                                      //********************************** Xa 
+                Xa = p1.X;
                 A2 = (p3.Y - p4.Y) / (p3.X - p4.X);
                 b2 = p3.Y - A2 * p3.X;
-                Ya = A2 * Xa + b2;                                              //********************************** Ya
+                Ya = A2 * Xa + b2;
                 if (p3.X <= Xa && p4.X >= Xa && Math.Min(p1.Y, p2.Y) <= Ya && Math.Max(p1.Y, p2.Y) >= Ya)
                 {
-                    return true;
+                    return new Point(Math.Round(Xa, 4), Math.Round(Ya, 4));
                 }
-                return false;
+                return null;
             }
             // If the second segment is vertical
             if (p3.X - p4.X == 0)
             {
                 // Find Xa, Ya - intersection points of two lines
-                Xa = p3.X;                                                       //********************************** Xa
+                Xa = p3.X;
                 A1 = (p1.Y - p2.Y) / (p1.X - p2.X);
                 b1 = p1.Y - A1 * p1.X;
-                Ya = A1 * Xa + b1;                                               //********************************** Ya
+                Ya = A1 * Xa + b1;
                 if (p1.X <= Xa && p2.X >= Xa && Math.Min(p3.Y, p4.Y) <= Ya && Math.Max(p3.Y, p4.Y) >= Ya)
                 {
-                    return true;
+                    return new Point(Math.Round(Xa, 4), Math.Round(Ya, 4));
                 }
-                return false;
+                return null;
             }
             // The both segments isn't vertical
             A1 = (p1.Y - p2.Y) / (p1.X - p2.X);
@@ -116,20 +138,60 @@ namespace AreaCalculatorDesktop
             if (A1 == A2)
             {
                 // Parallel segments
-                return false; 
+                return null;
             }
             // Xa - abscissa of the point of intersection of two lines
-            Xa = (b2 - b1) / (A1 - A2);                                        //********************************** Xa
-            Ya = A1 * Xa + b1;                                                 //********************************** Ya
+            Xa = (b2 - b1) / (A1 - A2);
+            Ya = A1 * Xa + b1;
             if ((Xa < Math.Max(p1.X, p3.X)) || (Xa > Math.Min(p2.X, p4.X)))
             {
                 // Point Xa is outside the intersection of the projections of the line segments on the X axis
-                return false;     
+                return null;
             }
             else
             {
-                return true;
+                return new Point(Math.Round(Xa, 4), Math.Round(Ya, 4));
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="vertexes"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <returns></returns>
+        public List<Point> CollisionLineAndPolygon(List<Point> vertices, Point p1, Point p2)
+        {
+            var collisionLineAndPolygonPoints = new List<Point>();
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                if (i < vertices.Count - 1)
+                {
+                    // The claculating continues while "i" isn't last element of the list
+                    Point? pointCrossingLines = CrossingLines(vertices[i], vertices[i + 1], p1, p2);
+                    if (pointCrossingLines != null)
+                    {
+                        collisionLineAndPolygonPoints.Add((Point)pointCrossingLines);
+                    }
+                }
+                else
+                {
+                    // If "i" is the last element
+                    Point? pointCrossingLines = CrossingLines(vertices[i], vertices[0], p1, p2);
+                    if (pointCrossingLines != null)
+                    {
+                        collisionLineAndPolygonPoints.Add((Point)pointCrossingLines);
+                    }
+                }
+            }
+            // Remove duplicates if the line passes through the vertices (vertex) of the polygon
+            return collisionLineAndPolygonPoints.Distinct().ToList();
+        }
+
+        public double LengthSection(Point p1, Point p2)
+        {
+            return (p2 - p1).Length;
         }
     }
 
@@ -138,8 +200,8 @@ namespace AreaCalculatorDesktop
     /// </summary>
     public abstract class Polygon
     {
-        private List<Point> _vertexes;
-        private List<Vector> _edges;
+        private readonly List<Point> _vertexes;
+        private readonly List<Vector> _edges;
 
         public List<Point> Vertexes
         {
@@ -150,12 +212,7 @@ namespace AreaCalculatorDesktop
             get => _edges;
         }
 
-        /// <summary>
-        /// The initializer method is used instead of initializing the class fields in the constructor because 
-        /// derived classes may need to compute 
-        /// </summary>
-        /// <param name="vertexes"></param>
-        protected void Initialize(List<Point> vertexes)
+        protected Polygon(List<Point> vertexes)
         {
             _vertexes = vertexes;
             _edges = CalculateEdges(vertexes);
@@ -178,8 +235,8 @@ namespace AreaCalculatorDesktop
                 }
                 else
                 {
-                    // If "i" is the last element, calculate last and first edges angle
-                    listOfEdges.Add(vertexes[0] - vertexes[i - 1]);
+                    // If "i" is the last element
+                    listOfEdges.Add(vertexes[0] - vertexes[i]);
                 }
             }
             return listOfEdges;
@@ -187,20 +244,19 @@ namespace AreaCalculatorDesktop
     }
 
     /// <summary>
-    /// 
+    /// Convex polygon
     /// </summary>
     public class Convex : Polygon
     {
         /// <summary>
         /// Constructor
         /// </summary>
-        public Convex(List<Point> vertexes)
+        public Convex(List<Point> vertexes) : base(vertexes)
         {
             if (!IsConvex(Vertexes, Edges))
             {
                 throw new Exception("The polygon is not convex.");
             }
-            Initialize(vertexes);
         }
         /// <summary>
         /// Determines whether the geometric figure is a convex polygon
@@ -225,14 +281,14 @@ namespace AreaCalculatorDesktop
                     calculateSumAnglesConvex += Vector.AngleBetween(edges[i], edges[0]);
                 }
             }
-            return standartSumAnglesConvex == (uint)Math.Round(calculateSumAnglesConvex);
+            return standartSumAnglesConvex == (uint)Math.Round(Math.Abs(calculateSumAnglesConvex));
         }
     }
 
     /// <summary>
-    /// 
+    /// Linear object which has width and contain linear equation
     /// </summary>
-    public class LinearObject : Polygon
+    public class LinearObject
     {
         private readonly uint _widthLine;
         private readonly LinearEquation _linearEquation;
@@ -250,14 +306,7 @@ namespace AreaCalculatorDesktop
         {
             _widthLine = width;
             _linearEquation = new LinearEquation(coefficientA, coefficientB, coefficientC);
-            //Initialize(CreateVertexes());
         }
-
-        //public List<Point> CreateVertexes()
-        //{
-        //    var a = LinearEquationInstance;
-        //    return new List<Point>();
-        //}
     }
 
     /// <summary>
@@ -267,29 +316,29 @@ namespace AreaCalculatorDesktop
     /// </summary>
     public class LinearEquation
     {
-        private readonly int _coefficientA;
-        private readonly int _coefficientB;
-        private readonly int _coefficientC;
-        private readonly int? _x;
-        private readonly int? _y;
+        private readonly double _coefficientA;
+        private readonly double _coefficientB;
+        private readonly double _coefficientC;
+        private readonly double? _x;
+        private readonly double? _y;
 
-        public int CoefficientA
+        public double CoefficientA
         {
             get => _coefficientA;
         }
-        public int CoefficientB
+        public double CoefficientB
         {
             get => _coefficientB;
         }
-        public int CoefficientC
+        public double CoefficientC
         {
             get => _coefficientC;
         }
-        public int? X
+        public double? X
         {
             get => _x;
         }
-        public int? Y
+        public double? Y
         {
             get => _y;
         }
@@ -300,7 +349,7 @@ namespace AreaCalculatorDesktop
         /// <param name="coefficientA">A</param>
         /// <param name="coefficientB">B</param>
         /// <param name="coefficientC">C</param>
-        public LinearEquation(int coefficientA, int coefficientB, int coefficientC)
+        public LinearEquation(double coefficientA, double coefficientB, double coefficientC)
         {
             _coefficientA = coefficientA;
             _coefficientB = coefficientB;
@@ -331,25 +380,26 @@ namespace AreaCalculatorDesktop
         /// If _y = const, then return point (coordinate ; _y)
         /// If y = const1 - const2 * x, then return point (x ; y)
         /// </returns>
-        public Point CalculatePoint(int coordinate)
+        public Point CalculatePoint(double coordinate)
         {
             var calculatedPoint = new Point();
             if ((X == null) && (Y == null))
             {
-                calculatedPoint.X = coordinate;
-                calculatedPoint.Y = (CoefficientC / CoefficientB) - (CoefficientA / CoefficientB) * calculatedPoint.X;
+                calculatedPoint.X = Math.Round(coordinate, 4);
+                calculatedPoint.Y = Math.Round((-(CoefficientC / CoefficientB) - (CoefficientA / CoefficientB)
+                    * calculatedPoint.X), 4); 
             }
             else
             {
                 if (X != null)
                 {
-                    calculatedPoint.X = (int)X;
+                    calculatedPoint.X = (double)X;
                     calculatedPoint.Y = coordinate;
                 }
                 else if (Y != null)
                 {
                     calculatedPoint.X = coordinate;
-                    calculatedPoint.Y = (int)Y;
+                    calculatedPoint.Y = (double)Y;
                 }
             }
             return calculatedPoint;
