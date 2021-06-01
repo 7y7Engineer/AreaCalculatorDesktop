@@ -5,8 +5,36 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AreaCalculatorDesktop"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
+        Title="MainWindow" Height="320" Width="800">
+    <Grid x:Name="mainGrid">
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="166,147,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="67"/>
+        <Label Content=" x + "  HorizontalAlignment="Left" Margin="235,145,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="270,147,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="67"/>
+        <Label Content=" y + " HorizontalAlignment="Left" Margin="340,145,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.149,0.641"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="375,147,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="67" RenderTransformOrigin="0.94,0.565"/>
+        <Label Content=" = 0" HorizontalAlignment="Left" Margin="446,144,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.419,0.5"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="50,147,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="67" RenderTransformOrigin="-0.388,-1.913"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="50,47,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="67" RenderTransformOrigin="-0.388,-1.913"/>
+        <Label Content="p = " HorizontalAlignment="Left" Margin="15,44,0,0" VerticalAlignment="Top"/>
+        <Label Content="w = " HorizontalAlignment="Left" Margin="15,144,0,0" VerticalAlignment="Top"/>
+        <Label Content="S = " HorizontalAlignment="Left" Margin="603,250,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.29,0.654"/>
+        <Label Content="NaN" HorizontalAlignment="Left" Margin="634,250,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.353,0.423"/>
+        <ListView HorizontalAlignment="Left" Height="85" Margin="603,142,0,0" VerticalAlignment="Top" Width="162">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <ListView HorizontalAlignment="Left" Height="85" Margin="604,15,0,0" VerticalAlignment="Top" Width="159">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Button Content="Add points" HorizontalAlignment="Left" Margin="159,48,0,0" VerticalAlignment="Top" Width="75"/>
+        <Button Content="Add line" HorizontalAlignment="Left" Margin="497,149,0,0" VerticalAlignment="Top" Width="75"/>
+        <Button Content="Calculate" HorizontalAlignment="Left" Margin="691,254,0,0" VerticalAlignment="Top" Width="75"/>
     </Grid>
 </Window>
