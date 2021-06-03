@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
-using System.Threading.Tasks;
 
 namespace AreaCalculatorDesktop
 {
@@ -211,8 +209,8 @@ namespace AreaCalculatorDesktop
             double squareLinesCrossPolygonWithoutOverlap = 0;
             for (int i = 0; i < linearObjects.Count; i++)
             {
-                squareLinesCrossPolygonWithoutOverlap += LengthSection(crossPolygonLines[i][0], crossPolygonLines[i][1])
-                    * linearObjects[i].Width;
+                squareLinesCrossPolygonWithoutOverlap += Math.Abs(LengthSection(crossPolygonLines[i][0], crossPolygonLines[i][1])
+                    * linearObjects[i].Width);
             }
             return Math.Abs(squareLinesCrossPolygonWithoutOverlap);
         }
@@ -234,9 +232,9 @@ namespace AreaCalculatorDesktop
                         crossPolygonLines[j][0], crossPolygonLines[j][1]);
                     if (pointCrossingLines != null)
                     {
-                        // Formula squareOverlapLines += A[i]*B[j]*sin(AngleAB)
-                        squareOverlapLines += linearObjects[i].Width * linearObjects[j].Width * Math.Abs(Math.Sin(Vector.AngleBetween(
-                            crossPolygonLines[i][1] - crossPolygonLines[i][0], crossPolygonLines[j][1] - crossPolygonLines[j][0])));
+                        // Formula squareOverlapLines += A[i] * B[j] * (1 / sin(AngleAB))
+                        squareOverlapLines += linearObjects[i].Width * linearObjects[j].Width * (1 / Math.Abs(Math.Sin(Vector.AngleBetween(
+                            crossPolygonLines[i][1] - crossPolygonLines[i][0], crossPolygonLines[j][1] - crossPolygonLines[j][0]))));
                     }
                 }
             }
